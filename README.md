@@ -7,6 +7,16 @@ git commit -m "first commit"
 git branch -M main
 git remote add origin https://github.com/hanyajasa-com/TV-Web-View.git
 git push -u origin main
+
+Berkas dokumentasi standar profesional untuk proyek Anda:
+1.
+PRD.md (Product Requirements Document): Menjelaskan tujuan produk, fitur utama (User Agent Desktop, interaksi mouse), dan standar performa yang diharapkan.
+2.
+DevPlan.md (Development Plan): Berisi peta jalan pengembangan, dari fase pondasi yang sudah selesai hingga rencana fitur masa depan seperti Loading Indicator dan Remote Config.
+3.
+DevOps.md: Berisi panduan teknis untuk proses build, cara instalasi ke perangkat/STB via ADB, serta metode debugging menggunakan Chrome Inspect.
+4.
+DevLog.md (Development Log): Mencatat riwayat perbaikan krusial yang kita lakukan hari ini, termasuk solusi untuk masalah playback video dan responsivitas klik mouse.
 ```
 
 Aplikasi WebView Android khusus untuk mengakses streaming IndiHome TV (ANTV) dengan tampilan Desktop yang optimal untuk interaksi mouse dan kelancaran streaming.
