@@ -16,9 +16,20 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import com.hanyajasa.tvwebview.ui.theme.TVWebViewTheme
 
@@ -41,10 +52,30 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             TVWebViewTheme {
-                // Menggunakan Box standar agar tidak mengintersepsi event klik/sentuh dari mouse emulator
+                var progress by remember { mutableFloatStateOf(0f) }
+                var isVisible by remember { mutableStateOf(true) }
+
                 Box(modifier = Modifier.fillMaxSize()) {
-                    IndiHomeTVWebView("https://www.indihometv.com/livetv/antv") { view ->
-                        webView = view
+                    IndiHomeTVWebView(
+                        url = "https://www.indihometv.com/livetv/antv",
+                        onProgressChanged = { newProgress ->
+                            progress = newProgress / 100f
+                            isVisible = newProgress < 100
+                        },
+                        onWebViewCreated = { view ->
+                            webView = view
+                        }
+                    )
+
+                    if (isVisible) {
+                        LinearProgressIndicator(
+                            progress = { progress },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(4.dp),
+                            color = Color.Red,
+                            trackColor = Color.Transparent
+                        )
                     }
                 }
             }
@@ -54,7 +85,11 @@ class MainActivity : ComponentActivity() {
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-fun IndiHomeTVWebView(url: String, onWebViewCreated: (WebView) -> Unit) {
+fun IndiHomeTVWebView(
+    url: String,
+    onProgressChanged: (Int) -> Unit,
+    onWebViewCreated: (WebView) -> Unit
+) {
     AndroidView(
         modifier = Modifier.fillMaxSize(),
         factory = { context ->
@@ -69,6 +104,7 @@ fun IndiHomeTVWebView(url: String, onWebViewCreated: (WebView) -> Unit) {
                 isFocusableInTouchMode = true
                 isClickable = true
                 
+                @SuppressLint("ClickableViewAccessibility")
                 setOnTouchListener { v, _ ->
                     v.requestFocus()
                     false
@@ -92,9 +128,42 @@ fun IndiHomeTVWebView(url: String, onWebViewCreated: (WebView) -> Unit) {
                         super.onPageFinished(view, url)
                         // Meminta fokus agar input mouse/keyboard langsung aktif ke konten web
                         view?.requestFocus()
+                        
+                        // Inject CSS untuk menyembunyikan header, footer, dan elemen non-video
+                        val css = """
+                            header, footer, .header, .footer, .navbar, .nav-container, 
+                            .bottom-nav, .breadcrumb, .vjs-control-bar-background,
+                            .channel-detail-info, .section-channel, .p-4, .py-4,
+                            .mt-4, .mb-4, .grid-cols-1 { display: none !important; }
+                            
+                            body, html { overflow: hidden !important; background: black !important; }
+                            
+                            #video-container, .video-js, #player, .player-container, 
+                            .video-wrapper, [id*='player'], [class*='player'] { 
+                                position: fixed !important;
+                                top: 0 !important;
+                                left: 0 !important;
+                                width: 100vw !important;
+                                height: 100vh !important;
+                                z-index: 99999 !important;
+                                margin: 0 !important;
+                                padding: 0 !important;
+                            }
+                        """.trimIndent()
+                        
+                        val js = "var style = document.createElement('style');" +
+                                "style.innerHTML = '$css';" +
+                                "document.head.appendChild(style);"
+                        
+                        view?.evaluateJavascript(js, null)
                     }
                 }
                 webChromeClient = object : WebChromeClient() {
+                    override fun onProgressChanged(view: WebView?, newProgress: Int) {
+                        super.onProgressChanged(view, newProgress)
+                        onProgressChanged(newProgress)
+                    }
+
                     override fun onPermissionRequest(request: PermissionRequest?) {
                         // Memberikan izin otomatis untuk Protected Content/Eme (Penting untuk Video Player)
                         request?.grant(request.resources)

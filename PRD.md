@@ -17,10 +17,12 @@
 | Video DRM/Protected Content tidak jalan | Override `onPermissionRequest` di `WebChromeClient` untuk auto-grant. |
 | Sesi login sering terputus | Aktivasi `CookieManager` dengan dukungan *Third-party cookies*. |
 | Navigasi sulit kembali ke halaman sebelumnya | Integrasi `OnBackPressedCallback` dengan `webView.goBack()`. |
+| Tidak ada indikator saat loading web | **Implementasi `LinearProgressIndicator` yang sinkron dengan `onProgressChanged`.** |
 
 ## 4. Fitur Utama (MVP)
 *   **WebView Engine**: Berbasis `android.webkit.WebView` yang dibungkus dalam `AndroidView` Compose.
 *   **Desktop Simulation**: String User Agent: `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36`.
+*   **Visual Feedback**: **Linear Loading Progress Bar di bagian atas layar.**
 *   **Media Support**: 
     *   `mixedContentMode`: `MIXED_CONTENT_ALWAYS_ALLOW`.
     *   `mediaPlaybackRequiresUserGesture`: `false` (Auto-play).
